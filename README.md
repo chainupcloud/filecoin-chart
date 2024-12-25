@@ -4,7 +4,7 @@ This repository maintains the method for deploying Filecoin Lotus RPC on Kuberne
 We are using the Docker image provided by the GLIF [Project](https://github.com/glifio/filecoin-docker), and we’d like to express our sincere gratitude for their contribution to the community.
 
 
-Additionally, our RPC service has been listed on [Chainlist](https://filecoin.chainup.net/rpc/v1), and you can access it via the following URL:
+Additionally, our RPC service has been listed on [Chainlist](https://chainlist.org/?search=fil), and you can access it via the following URL:
 
 https://filecoin.chainup.net/rpc/v1
 
