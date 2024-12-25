@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata: 
+  name: {{ include "common.names.fullname" . }}
+  labels:
+     {{- include "common.labels.matchLabels"  .| nindent 4 }}
+  annotations:
+  {{- range $key, $value := .Values.lotusServiceAnnotations }}
+      {{ $key }}: {{ $value | quote }}
+  {{- end }}
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "common.labels.matchLabels"  .| nindent 4 }}
+  ports:
+    - protocol: TCP
+      port: 1234
+      targetPort: 1234
+      name: tcp-api
+    {{- if .Values.lotusEnv.INFRA_LOTUS_GATEWAY }}
+    - protocol: TCP
+      port: 2346
+      targetPort: 2346
+      name: gateway
+    {{- end }}

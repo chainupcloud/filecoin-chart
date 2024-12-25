@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  labels:
+    app: lotus-node-app
+spec:
+  replicas: 1
+  serviceName: {{ .Release.Name }}-lotus-service
+  selector:
+    matchLabels:
+      {{- include "common.labels.matchLabels"  .| nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "common.labels.matchLabels"  .| nindent 8 }}
+    spec:
+      securityContext:
+        runAsGroup: {{ .Values.runAsGroup }}
+        runAsUser: {{ .Values.runAsUser }}
+        fsGroup: {{ .Values.fsGroup }}
+      volumes:
+      {{- if .Values.useLotusSecret }}
+        - name: lotus-secret-vol
+          secret:
+            secretName: filecoin-secret
+            defaultMode: 384 # permission 0600
+      {{- end}}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "common.names.fullname" . }}
+      initContainers:
+      - name: hostpath-permission
+        image: busybox
+        imagePullPolicy: Always
+        command: ["/bin/sh","-c"]
+        args:
+          - mkdir -p /tmp/lotus /tmp/ipfs /tmp/snapshot && chown -R 2000:2000 /tmp;
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+          - name: {{ .Values.lotusVolumeName }}
+            mountPath: /tmp
+      containers:
+      - name: lutos
+        image: {{ .Values.image }}
+        imagePullPolicy: {{ .Values.lotusImagePullPolicy }}
+        command: ["/etc/lotus/docker/run"]
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh","-c","rm -f $INFRA_LOTUS_HOME/.lotus/sync-complete"]
+        env:
+        {{- range $key, $value := .Values.lotusEnv }}
+        - name: {{ $key }}
+          value: {{ $value | quote }}
+        {{- end }}
+        - name: SNAPSHOTURL
+          value: {{ .Values.spec.snapshotURL }}
+        ports:
+        - containerPort: 1234
+          name: api
+        - containerPort: 1235
+          name: p2p
+        volumeMounts:
+          {{- if .Values.useLotusSecret }}
+          - name: lotus-secret-vol
+            mountPath: /keystore
+          {{- end }}
+          - name: {{ .Values.lotusVolumeName }}
+            mountPath: /home/lotus_user/.lotus
+          - name: {{ .Values.lotusVolumeName }}
+            mountPath: /home/lotus_user/snapshot
+            subPath: snapshot
+        resources:
+          requests:
+            cpu: {{ .Values.spec.resources.cpu | quote }}
+            memory: {{ .Values.spec.resources.memory | quote }}
+          limits:
+            cpu: {{ .Values.spec.resources.cpuLimit | quote }}
+            memory: {{ .Values.spec.resources.memoryLimit | quote }}
+    {{- with .Values.spec.affinity }}
+      affinity:
+        {{ toYaml . | nindent 8 | trim }}
+    {{- end }}
+    {{- with .Values.spec.tolerations }}
+      tolerations:
+        {{ toYaml . | nindent 8 | trim }}
+    {{- end }}
+    {{- with .Values.spec.nodeSelector }}
+      nodeSelector:
+        {{ toYaml . | nindent 8 | trim }}
+    {{- end }}
+--- 
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "common.names.fullname" . }}
+  labels:
+{{ include "common.labels.matchLabels" . | indent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  storageClassName: {{ .Values.spec.resources.storageClass }}
+  resources:
+    requests:
+      storage: {{ .Values.spec.resources.storage | quote }}

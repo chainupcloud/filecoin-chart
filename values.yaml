@@ -1,0 +1,57 @@
+# lotusImagePullPolicy indicates when to pull the image
+lotusImagePullPolicy: Always
+
+image: glif/lotus:1.20.3-hyperspace-amd-custom
+
+# runAsUser is a user ID to run all processes with
+runAsUser: 2000
+# runAsGroup is a group ID to run all processes with
+runAsGroup: 2000
+# fsGroup is a suplimentary group that will own all the
+# files created in volumes
+fsGroup: 2000
+
+# useLotusSecret indicates if Kubernetes secret of lotus has to be mounted
+useLotusSecret: true
+
+# lotusVolumeName is a volume name of lotus
+lotusVolumeName: data
+
+lotusEnv:
+  INFRA_LOTUS_DAEMON: "true"
+  INFRA_LOTUS_HOME: "/home/lotus_user"
+  INFRA_CLEAR_RESTART: "false"
+  INFRA_SYNC: "true"
+  INFRA_SECRETVOLUME: "true"
+  INFRA_PERSISTNODEID: "false"
+  ALLOWED_DELAY: 3
+  GOLOG_LOG_FMT: "json"
+  INFRA_IMPORT_SNAPSHOT: "true"
+  LOTUS_FEVM_ENABLEETHRPC: 1
+
+lotusServiceAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "1234"
+  prometheus.io/path: "/debug/metrics"
+  konghq.com/path: "/rpc/v1"
+
+
+ingressHost: "filecoin.chainup.net"
+global:
+  protocolType: filecoin
+  shared: 1
+  groupLabel: []
+
+  network: mainnet
+
+  client: lotus
+
+
+spec:
+  resources:
+    cpu: 4
+    cpuLimit: 8
+    memory: 32Gi
+    memoryLimit: 48Gi
+    storage: 200Gi
+    storageClass: gp2

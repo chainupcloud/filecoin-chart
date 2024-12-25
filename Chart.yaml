@@ -1,0 +1,24 @@
+apiVersion: v2
+name: filecoin
+type: application
+
+# This is the chart version.
+version: "1.0.0"
+description: A Filecoin Helm chart for Kubernetes - v1
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+# It is recommended to use it with quotes.
+appVersion: "1.16.0"
+keywords:
+  - chainup
+  - filecoin
+  - web3
+maintainers:
+  - name: radd
+    email: radd@chainup.com
+dependencies:
+  - name: common
+    repository: file://../../common
+    version: 1.0.0

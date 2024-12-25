@@ -1,0 +1,25 @@
+# ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    konghq.com/plugins: kong-prometheus-cluster-plugins,web3-gateway-cluster
+    konghq.com/strip-path: "true"
+  name: {{ include "common.names.fullname" . }}
+spec:
+  ingressClassName: kong
+  tls:
+    - secretName: {{ .Values.global.ingressSecretName }}
+      hosts:
+        - {{ .Values.ingressHost }}
+  rules:
+    - host: {{ .Values.ingressHost }}
+      http:
+        paths:
+          - backend:
+              service:
+                name: {{ include "common.names.fullname" . }}
+                port:
+                  number: 1234
+            path: /~/(.*)
+            pathType: ImplementationSpecific
